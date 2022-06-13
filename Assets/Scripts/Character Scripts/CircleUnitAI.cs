@@ -2,19 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SquareUnitAI : MonoBehaviour
+public class CircleUnitAI : MonoBehaviour
 {
-
-    private UnitStatsScriptableObject squareStats;
+    private UnitStatsScriptableObject circleStats;
     public Transform enemyLocation;
-
     public int level = 0;
+
     private Rigidbody2D rb;
     private Vector2 movement;
 
     private void Awake()
     {
-        squareStats = (UnitStatsScriptableObject)ScriptableObject.CreateInstance(typeof(UnitStatsScriptableObject));
+        circleStats = (UnitStatsScriptableObject)ScriptableObject.CreateInstance(typeof(UnitStatsScriptableObject));
         setLevel(level);
         rb = this.GetComponent<Rigidbody2D>();
     }
@@ -30,35 +29,30 @@ public class SquareUnitAI : MonoBehaviour
 
     private void Update()
     {
-        if (squareStats.currentHealth <= 0)
+        if (circleStats.currentHealth <= 0)
         {
             Destroy(gameObject);
         }
-    }
-
-    private void moveCharacter(Vector2 direction)
-    {
-        rb.MovePosition((Vector2)transform.position + new Vector2(direction.x * squareStats.movementSpeed[level], 0));
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(collision.gameObject.TryGetComponent<BaseController>(out BaseController enemyBase))
+        if (collision.gameObject.TryGetComponent<BaseController>(out BaseController enemyBase))
         {
-            enemyBase.TakeDamage(squareStats.damage[level]);
+            enemyBase.TakeDamage(circleStats.damage[level]);
             Destroy(gameObject);
         }
         if (collision.gameObject.TryGetComponent<SquareUnitAI>(out SquareUnitAI enemysquare))
         {
-            enemysquare.TakeDamage(squareStats.damage[level], squareStats.damageType[0]);
+            enemysquare.TakeDamage(circleStats.damage[level], circleStats.damageType[2]);
         }
         if (collision.gameObject.TryGetComponent<TriangleUnitAI>(out TriangleUnitAI enemytriangle))
         {
-            enemytriangle.TakeDamage(squareStats.damage[level], squareStats.damageType[0]);
+            enemytriangle.TakeDamage(circleStats.damage[level], circleStats.damageType[2]);
         }
         if (collision.gameObject.TryGetComponent<CircleUnitAI>(out CircleUnitAI enemycircle))
         {
-            enemycircle.TakeDamage(squareStats.damage[level], squareStats.damageType[0]);
+            enemycircle.TakeDamage(circleStats.damage[level], circleStats.damageType[2]);
         }
     }
 
@@ -69,13 +63,32 @@ public class SquareUnitAI : MonoBehaviour
 
     public void TakeDamage(int damage, string damageType)
     {
-        if (damageType == "square" || damageType == "triangle")
+        if (damageType == "square" || damageType == "circle")
         {
-            squareStats.currentHealth -= 3 * damage;
+            circleStats.currentHealth -= 3 * damage;
         }
         else
         {
-            squareStats.currentHealth -= damage;
+            circleStats.currentHealth -= damage;
+        }
+    }
+
+    private void moveCharacter(Vector2 direction)
+    {
+        rb.MovePosition((Vector2)transform.position + new Vector2(direction.x * circleStats.movementSpeed[level], 0));
+    }
+
+    public void setLevel(int newLevel)
+    {
+        level = newLevel;
+
+        if (newLevel > 0)
+        {
+            circleStats.currentHealth = circleStats.maxHealth[newLevel] - (circleStats.maxHealth[newLevel - 1] - circleStats.currentHealth);
+        }
+        else
+        {
+            circleStats.currentHealth = circleStats.maxHealth[newLevel];
         }
     }
 
@@ -84,21 +97,8 @@ public class SquareUnitAI : MonoBehaviour
         enemyLocation = newEnemyLocation;
     }
 
-    public void setLevel(int newLevel)
-    {
-        level = newLevel;
-        
-        if (newLevel > 0) {
-           squareStats.currentHealth = squareStats.maxHealth[newLevel] - (squareStats.maxHealth[newLevel - 1] - squareStats.currentHealth);
-        }
-        else
-        {
-            squareStats.currentHealth = squareStats.maxHealth[newLevel];
-        }
-    }
-
     private void OnDestroy()
     {
-        ScriptableObject.Destroy(squareStats, 0);
+        ScriptableObject.Destroy(circleStats, 0);
     }
 }
